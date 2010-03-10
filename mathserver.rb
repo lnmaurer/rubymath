@@ -23,14 +23,25 @@ class Worksheet
   def eval(cmd,index=nil)
     index = @in.size unless index #if we're making a new entry, set index accordingly
     @in[index] = cmd
-    @out[index], @binding = Kernel.eval('[' + cmd + ',Kernel.binding]',@binding)
+    begin
+      @out[index], @binding = Kernel.eval('[' + cmd + ',Kernel.binding]',@binding)
+    rescue Exception => e
+      #if there's an error in the command, save it an the backtrace in @out
+      @out[index] = "ERROR:\n" + e.message + "\n" + e.backtrace[0..4].join("\n")
+      puts @out[index]
+      raise
+    end
+  end
+  def size
+    @in.size
   end
 end
 
 def to_html(ob)
   case ob
   when Plot then "\n" + ob.svg.inline
-  else CodeRay.scan(ob.to_s, :ruby).span
+  #otherwise we want to display it as text with syntax highlighting and retruns
+  else CodeRay.scan(ob.to_s, :ruby).span.gsub("\n",'<br />')
   end
 end
 
@@ -53,8 +64,13 @@ post '/worksheet/:num/newcommand' do
   content_type 'application/xml', :charset => 'utf-8'
   @num = params[:num].to_i
   @newcommand = params[:newcommand]
-  $worksheets[@num].eval(@newcommand)
-  redirect "/worksheet/#{@num}#entry"
+  begin
+    $worksheets[@num].eval(@newcommand)
+    redirect "/worksheet/#{@num}#entry"
+  rescue
+    #if there's an error, let the user correct it
+    redirect "/worksheet/#{@num}/edit/#{$worksheets[@num].size - 1}"
+  end
 end
 
 post '/worksheet/:num/edit/:index' do
@@ -62,8 +78,13 @@ post '/worksheet/:num/edit/:index' do
   @num = params[:num].to_i
   @index = params[:index].to_i 
   @editedcommand = params[:editedcommand]
-  $worksheets[@num].eval(@editedcommand,@index)
-  redirect "/worksheet/#{@num}"
+  begin
+    $worksheets[@num].eval(@editedcommand,@index)
+    redirect "/worksheet/#{@num}"
+  rescue
+    #if there's an error, let the user correct it  
+    redirect "/worksheet/#{@num}/edit/#{@index}"
+  end
 end
 
 get '/worksheet/:num/edit/:index' do
