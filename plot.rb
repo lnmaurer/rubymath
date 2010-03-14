@@ -91,16 +91,16 @@ class Plot2D < Plot
     @data_points.each{|hsh| x << hsh[:x]; y << hsh[:y]; styles << hsh[:style]}
 
     #if @xrange hasn't been given, find the larest and smallest 'x's in the data points
-    xmin, xmax = (@xrange == nil ? [x.flatten.min, x.flatten.max] : @xrange)
+    xmin, xmax = (@xrange == nil ? [x.flatten.min, x.flatten.max] : @xrange.collect{|v|v.value})
     
     @fctns.each do |hsh|
       x << linspace(xmin,xmax,100) #IS 100 STEPS ALWAYS GOOD?
-      y << x[-1].collect{|xi| hsh[:fctn].subs(hsh[:xvar],xi)}      
+      y << x[-1].collect{|xi| hsh[:fctn].subs(hsh[:xvar],xi,true)}      
       styles << hsh[:style]
     end
     
     #if @yrange isn't given, find the larest and smallest 'x's in all the points
-    ymin, ymax = (@yrange == nil ? [y.flatten.min, y.flatten.max] : @yrange)
+    ymin, ymax = (@yrange == nil ? [y.flatten.min, y.flatten.max] : @yrange.collect{|v|v.value})
     
     width , height = xmax - xmin, ymax - ymin     
     pwidth = width > height ? 4.0 : 4.0 * width / height #is 4 inches allways a good value?

@@ -1,23 +1,10 @@
 require 'rubygems'
 require 'symbolic'
 
-# def nint(func,var,lb,ub,points=1000)
-#   initval = var.value
-#   res = 0
-#   step = (ub.to_f-lb)/points
-#   a = lb
-#   points.times do |i|
-#     var.value = a
-#     fa = func.value
-#     var.value = a + step/2
-#     fab = func.value
-#     var.value = a + step
-#     fb = func.value
-#     res += step/6.0*(fa+4*fab+fb)
-#     a += step
-#   end
-#   res
-# end
+def linspace(start,stop,num = 100)
+  step = (stop - start)/(num - 1.0)
+  (0..(num-1)).to_a.collect{|n| start + n * step}
+end
 
 
 def nint(func,var,lb,ub,points=1000)

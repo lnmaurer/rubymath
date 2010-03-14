@@ -1,17 +1,14 @@
+require '/home/leon/Development/symbolic/lib/symbolic.rb'
+require 'numeric'
+require 'plot'
+require 'yaml'
 require 'rubygems'
+#require 'symbolic'
 require 'haml'
 require 'sinatra'
 require 'coderay'
-require 'numeric'
-#require 'symbolic'
-require 'plot'
-require '/home/leon/Development/symbolic/lib/symbolic.rb'
-
-#following function is here as a quick hack
-  def linspace(start,stop,num = 100)
-    step = (stop - start)/(num - 1.0)
-    (0..(num-1)).to_a.collect{|n| start + n * step}
-  end
+include Symbolic::Math #so that we have easy access to exp, cos, etc.
+include Symbolic::Constants
 
 class Worksheet
   attr_reader :in, :out
@@ -94,6 +91,36 @@ get '/worksheet/:num/edit/:index' do
   haml :edit
 end
 
+get '/worksheet/:num/save' do
+  content_type 'text/plain'
+  @num = params[:num].to_i
+  $worksheets[@num].in.to_yaml
+end
+
+get '/worksheet/:num/load' do
+  @num = params[:num].to_i
+  haml :load
+end
+
+post '/worksheet/:num/load' do
+  #are we loading it in to the current worksheet or a new one?
+  @num = params[:ws] == 'current' ? params[:num].to_i : $worksheets.size
+  $worksheets[@num] = Worksheet.new
+  YAML.load(params[:file][:tempfile].read).each{|c| $worksheets[@num].eval(c)}
+  redirect "/worksheet/#{@num}"
+end
+
+get '/worksheet/:num/clear' do
+  @num = params[:num].to_i
+  haml :clear
+end
+
+post '/worksheet/:num/clear' do
+  @num = params[:num].to_i
+  $worksheets[@num] = Worksheet.new
+  redirect "/worksheet/#{@num}"
+end
+
 __END__
 
 @@ worksheet
@@ -101,7 +128,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title Entry
+    %title Worksheet #{@num}
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
@@ -114,6 +141,21 @@ __END__
     %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
       %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
       %input{:type => :submit, :value => "Calculate"}
+    %hr
+    %p
+      %a{:href => "/worksheet/#{@num}/save"}="Save"
+      %a{:href => "/worksheet/#{@num}/load"}="Load"
+      %a{:href => "/", :target=>'_blank'}="New"
+      %a{:href => "/worksheet/#{@num}/clear"}="Clear"
+    - if $worksheets.size > 1
+      %p
+        Open Worksheets:
+        - $worksheets.size.times do |i|
+          - if i != @num
+            %a{:href => "/worksheet/#{i}"}="#{i}"
+          -else
+            ="#{i}"
+        %a{:href => "/worksheet/#{@num}"}="Refresh Current Page"
 
 @@ edit
 !!! Strict
@@ -139,3 +181,44 @@ __END__
     %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
       %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
       %input{:type => :submit, :value => "Calculate"}
+    %hr
+    %p
+      %a{:href => "/worksheet/#{@num}/save"}="Save"
+      %a{:href => "/worksheet/#{@num}/load"}="Load"
+      %a{:href => "/", :target=>'_blank'}="New"
+      %a{:href => "/worksheet/#{@num}/clear"}="Clear"
+    - if $worksheets.size > 1
+      %p
+        Open Worksheets:
+        - $worksheets.size.times do |i|
+          - if i != @num
+            %a{:href => "/worksheet/#{i}"}="#{i}"
+          -else
+            ="#{i}"
+        %a{:href => "/worksheet/#{@num}"}="Refresh Current Page"
+    
+@@ load
+%html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
+  %head
+    %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
+    %title Loading Worksheet #{@num}
+  %body
+    %form{:action=>"/worksheet/#{@num}/load",:method=>"post",:enctype=>"multipart/form-data"}
+      %p='Do you want the loaded worksheet to overwrite the current one or to open in a new worksheet?'
+      %input{:type => :radio, :name => 'ws', :value => 'current', :checked => 'checked'} Current Worksheet
+      %input{:type => :radio, :name => 'ws', :value => 'new'} New Worksheet
+      %p='Please select a file:'
+      %input{:type => :file, :name => 'file'}
+      %br
+      %input{:type=>:submit,:value=>"Upload"}
+      
+@@ clear
+%html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
+  %head
+    %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
+    %title Are you sure you'd like to clear worksheet #{@num}?
+  %body
+    %p='Do you really want to clear the worksheet? Your work will not be saved.'
+    %br
+    %form{:action=>"/worksheet/#{@num}/clear",:method=>"post"}
+      %input{:type=>"submit",:value=>"Clear Worksheet"}
