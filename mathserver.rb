@@ -12,7 +12,9 @@ include Symbolic::Constants
 
 class Worksheet
   attr_reader :in, :out
-  def initialize
+  attr_accessor :name
+  def initialize(name = '')
+    @name = name
     @in = Array.new
     @out = Array.new
     @binding = Kernel.binding
@@ -73,11 +75,15 @@ post '/worksheet/:num/:command' do
   elsif @command == 'load'
     #are we loading it in to the current worksheet or a new one?
     @num = params[:ws] == 'current' ? params[:num].to_i : $worksheets.size
-    $worksheets[@num] = Worksheet.new
-    YAML.load(params[:file][:tempfile].read).each{|c| $worksheets[@num].eval(c)}
+    hsh = YAML.load(params[:file][:tempfile].read)
+    $worksheets[@num] = Worksheet.new(hsh['Worksheet_Name'])
+    hsh['Input'].each{|c| $worksheets[@num].eval(c)}
     redirect "/worksheet/#{@num}/disp#bottom"
   elsif @command == 'clear'
     $worksheets[@num] = Worksheet.new
+    redirect "/worksheet/#{@num}/disp#bottom"    
+  elsif @command == 'name'
+    $worksheets[@num].name = params[:name]
     redirect "/worksheet/#{@num}/disp#bottom"    
   end
 end
@@ -103,10 +109,10 @@ post '/worksheet/:num/edit/:index' do
   end
 end
 
-get '/worksheet/:num/save/worksheet.rbmw' do
+get '/worksheet/:num/save/:wsname' do
   content_type 'text/x-yaml'
   @num = params[:num].to_i
-  $worksheets[@num].in.to_yaml
+  {'Worksheet_Name' => $worksheets[@num].name, 'Input' => $worksheets[@num].in}.to_yaml
 end
 
 __END__
@@ -116,7 +122,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title="Worksheet #{@num}"
+    %title="Worksheet #{@num}#{$worksheets[@num].name == '' ? '' : ' (' + $worksheets[@num].name + ')'}"
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
@@ -132,7 +138,8 @@ __END__
         %input{:type => :submit, :value => "Calculate"}
     %hr
     %p{:id => "#{@command == 'disp' ? 'bottom' : ''}"}
-      %a{:href => "/worksheet/#{@num}/save/worksheet.rbmw"}="Save"
+      %a{:href => "/worksheet/#{@num}/name#bottom"}="(re)Name Worksheet"
+      %a{:href => "/worksheet/#{@num}/save/#{$worksheets[@num].name == '' ? 'worksheet' : $worksheets[@num].name}.rbmw"}="Save"
       %a{:href => "/worksheet/#{@num}/load#bottom"}="Load"
       %a{:href => "/", :target=>'_blank'}="New"
       %a{:href => "/worksheet/#{@num}/clear#bottom"}="Clear"
@@ -140,9 +147,9 @@ __END__
         Open Worksheets:
         - $worksheets.size.times do |i|
           - if i != @num
-            %a{:href => "/worksheet/#{i}/disp#bottom"}="#{i}"
+            %a{:href => "/worksheet/#{i}/disp#bottom"}="#{i}#{$worksheets[i].name == '' ? '' : ' (' + $worksheets[i].name + ')'}"
           -else
-            ="#{i}"
+            ="#{i}#{$worksheets[i].name == '' ? '' : ' (' + $worksheets[i].name + ')'}"
         %a{:href => "/worksheet/#{@num}/disp#bottom"}="Refresh Current Page"
     - if @command == 'load'
       %form{:action=>"/worksheet/#{@num}/load",:method=>"post",:enctype=>"multipart/form-data"}
@@ -159,6 +166,11 @@ __END__
       %form{:action=>"/worksheet/#{@num}/clear",:method=>"post"}
         %p='Do you really want to clear the worksheet? Your work will not be saved.'
         %input{:type=>"submit",:value=>"Clear Worksheet"}
+    - if @command == 'name'
+      %form{:action=>"/worksheet/#{@num}/name",:method=>"post"}
+        %p='Enter a name for this worksheet:'
+        %input{:type=>'text', :size=>'40', :name=>'name'}
+        %input{:type=>'submit',:value=>'Enter'}
     -if @command != 'disp'
       %p{:id=>'bottom'}
         %a{:href => "/worksheet/#{@num}/disp#bottom"}="Cancel"
@@ -168,7 +180,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title="Editing Worksheet #{@num}, Line #{@index}"
+    %title="Editing Worksheet #{@num}#{$worksheets[i].name == '' ? '' : ' (' + $worksheets[i].name + ')'}, Line #{@index}"
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
