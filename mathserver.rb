@@ -139,7 +139,7 @@ __END__
     %hr
     %p{:id => "#{@command == 'disp' ? 'bottom' : ''}"}
       %a{:href => "/worksheet/#{@num}/name#bottom"}="(re)Name Worksheet"
-      %a{:href => "/worksheet/#{@num}/save/#{$worksheets[@num].name == '' ? 'worksheet' : $worksheets[@num].name}.rbmw"}="Save"
+      %a{:href => "/worksheet/#{@num}/save/#{$worksheets[@num].name == '' ? "worksheet#{@num}" : $worksheets[@num].name}.rbmw"}="Save"
       %a{:href => "/worksheet/#{@num}/load#bottom"}="Load"
       %a{:href => "/", :target=>'_blank'}="New"
       %a{:href => "/worksheet/#{@num}/clear#bottom"}="Clear"
@@ -180,7 +180,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title="Editing Worksheet #{@num}#{$worksheets[i].name == '' ? '' : ' (' + $worksheets[i].name + ')'}, Line #{@index}"
+    %title="Editing Worksheet #{@num}#{$worksheets[@num].name == '' ? '' : ' (' + $worksheets[@num].name + ')'}, Line #{@index}"
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
