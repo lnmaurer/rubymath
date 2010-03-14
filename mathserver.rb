@@ -48,7 +48,7 @@ get '/' do
   #make new worksheet
   $worksheets << Worksheet.new
   #redirect to new worksheet
-  redirect "/worksheet/#{$worksheets.size - 1}#entry"
+  redirect "/worksheet/#{$worksheets.size - 1}#bottom"
 end
 
 get '/worksheet/:num' do
@@ -63,7 +63,7 @@ post '/worksheet/:num/newcommand' do
   @newcommand = params[:newcommand]
   begin
     $worksheets[@num].eval(@newcommand)
-    redirect "/worksheet/#{@num}#entry"
+    redirect "/worksheet/#{@num}#bottom"
   rescue
     #if there's an error, let the user correct it
     redirect "/worksheet/#{@num}/edit/#{$worksheets[@num].size - 1}"
@@ -77,7 +77,7 @@ post '/worksheet/:num/edit/:index' do
   @editedcommand = params[:editedcommand]
   begin
     $worksheets[@num].eval(@editedcommand,@index)
-    redirect "/worksheet/#{@num}"
+    redirect "/worksheet/#{@num}#bottom"
   rescue
     #if there's an error, let the user correct it  
     redirect "/worksheet/#{@num}/edit/#{@index}"
@@ -107,7 +107,7 @@ post '/worksheet/:num/load' do
   @num = params[:ws] == 'current' ? params[:num].to_i : $worksheets.size
   $worksheets[@num] = Worksheet.new
   YAML.load(params[:file][:tempfile].read).each{|c| $worksheets[@num].eval(c)}
-  redirect "/worksheet/#{@num}"
+  redirect "/worksheet/#{@num}#bottom"
 end
 
 get '/worksheet/:num/clear' do
@@ -118,7 +118,7 @@ end
 post '/worksheet/:num/clear' do
   @num = params[:num].to_i
   $worksheets[@num] = Worksheet.new
-  redirect "/worksheet/#{@num}"
+  redirect "/worksheet/#{@num}#bottom"
 end
 
 __END__
@@ -138,25 +138,24 @@ __END__
           %br
           = "Out #{index}: #{to_html(output)}"
     %hr
-    %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
+    %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand"}
       %p
         %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
         %input{:type => :submit, :value => "Calculate"}
     %hr
-    %p
+    %p{:id => 'bottom'}
       %a{:href => "/worksheet/#{@num}/save"}="Save"
       %a{:href => "/worksheet/#{@num}/load"}="Load"
       %a{:href => "/", :target=>'_blank'}="New"
       %a{:href => "/worksheet/#{@num}/clear"}="Clear"
-    - if $worksheets.size > 1
-      %p
+      - if $worksheets.size > 1
         Open Worksheets:
         - $worksheets.size.times do |i|
           - if i != @num
-            %a{:href => "/worksheet/#{i}"}="#{i}"
+            %a{:href => "/worksheet/#{i}#bottom"}="#{i}"
           -else
             ="#{i}"
-        %a{:href => "/worksheet/#{@num}"}="Refresh Current Page"
+        %a{:href => "/worksheet/#{@num}#bottom"}="Refresh Current Page"
 
 @@ edit
 !!! Strict
@@ -167,12 +166,12 @@ __END__
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
-        %li
+        %li{:id => "#{index == @index ? 'edit' : ''}"}
           %a{:href => "/worksheet/#{@num}/edit/#{index}#edit"}="In #{index}:"
           - if index != @index
             = "#{to_html(input)}"
           - else
-            %form{:method => 'post', :action => "/worksheet/#{@num}/edit/#{index}", :id => 'edit'}
+            %form{:method => 'post', :action => "/worksheet/#{@num}/edit/#{index}"}
               %p
                 %textarea{:cols =>'80', :rows => '5', :name=>'editedcommand'}="#{input}"
                 %input{:type => :submit, :value => "Edit"}	      
@@ -184,22 +183,22 @@ __END__
         %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
         %input{:type => :submit, :value => "Calculate"}
     %hr
-    %p
+    %p{:id => 'bottom'}
       %a{:href => "/worksheet/#{@num}/save"}="Save"
       %a{:href => "/worksheet/#{@num}/load"}="Load"
       %a{:href => "/", :target=>'_blank'}="New"
       %a{:href => "/worksheet/#{@num}/clear"}="Clear"
-    - if $worksheets.size > 1
-      %p
+      - if $worksheets.size > 1
         Open Worksheets:
         - $worksheets.size.times do |i|
           - if i != @num
-            %a{:href => "/worksheet/#{i}"}="#{i}"
+            %a{:href => "/worksheet/#{i}#bottom"}="#{i}"
           -else
             ="#{i}"
-        %a{:href => "/worksheet/#{@num}"}="Refresh Current Page"
+        %a{:href => "/worksheet/#{@num}#bottom"}="Refresh Current Page"
     
 @@ load
+!!! Strict
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
@@ -215,6 +214,7 @@ __END__
       %input{:type=>:submit,:value=>"Upload"}
       
 @@ clear
+!!! Strict
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
