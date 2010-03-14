@@ -1,0 +1,26 @@
+rubymath -- a web interface for ruby with a focus on doing math. The goal is to
+have a web interface like SAGE (http://www.sagemath.org/), but be written in
+ruby. It uses the symbolic library to do symbolic mathematics, and currently 
+supports syntax highlighting and basic 2D plotting.
+
+It is in a rough but working state, and can use any help that it can get.
+
+This program relies on require haml, sinatra, and coderay -- available as ruby
+gems.
+
+It also requires a recent version of symbolic:
+
+http://github.com/brainopia/symbolic
+
+The mathserver.rb file should be edited to reflect the location of this library.
+
+To start the program, run mathserver.rb with ruby ("ruby mathserver.rb" on the
+command line) and then open http://localhost:4567 with a web browser. The
+server may take some seconds to start, so if nothing shows up at that address,
+hit refresh until it does.
+
+Enter any ruby commands in the input and you're good to go.
+
+Files in 'svg/' are modified versions of Yuya Kato's Ruby/SVG library,
+available under the LGPL:
+http://ruby-svg.sourceforge.jp/ 
