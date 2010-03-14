@@ -139,8 +139,9 @@ __END__
           = "Out #{index}: #{to_html(output)}"
     %hr
     %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
-      %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
-      %input{:type => :submit, :value => "Calculate"}
+      %p
+        %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
+        %input{:type => :submit, :value => "Calculate"}
     %hr
     %p
       %a{:href => "/worksheet/#{@num}/save"}="Save"
@@ -172,15 +173,16 @@ __END__
             = "#{to_html(input)}"
           - else
             %form{:method => 'post', :action => "/worksheet/#{@num}/edit/#{index}", :id => 'edit'}
-              %textarea{:cols =>'80', :rows => '5', :name=>'editedcommand'}
-                =" #{input}"
-              %input{:type => :submit, :value => "Edit"}	      
+              %p
+                %textarea{:cols =>'80', :rows => '5', :name=>'editedcommand'}="#{input}"
+                %input{:type => :submit, :value => "Edit"}	      
           %br
           = "Out #{index}: #{to_html(output)}"
     %hr
     %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
-      %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
-      %input{:type => :submit, :value => "Calculate"}
+      %p
+        %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
+        %input{:type => :submit, :value => "Calculate"}
     %hr
     %p
       %a{:href => "/worksheet/#{@num}/save"}="Save"
