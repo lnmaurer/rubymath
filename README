@@ -1,7 +1,8 @@
 rubymath -- a web interface for ruby with a focus on doing math. The goal is to
-have a web interface like SAGE (http://www.sagemath.org/), but be written in
-ruby. It uses the symbolic library to do symbolic mathematics, and currently 
-supports syntax highlighting and basic 2D plotting.
+make a coplete computer algebra system with a web interface like SAGE
+(http://www.sagemath.org/), but be written in ruby. It uses the symbolic
+library to do symbolic mathematics, and currently supports syntax highlighting
+and basic 2D plotting.
 
 See an example worksheet at:
 
@@ -25,6 +26,23 @@ hit refresh until it does.
 
 Enter any ruby commands in the input and you're good to go.
 
-Files in 'svg/' are modified versions of Yuya Kato's Ruby/SVG library,
-available under the LGPL:
+Files in 'svg/' are modified versions of Yuya Kato's Ruby/SVG library. The
+original is available under the LGPL:
 http://ruby-svg.sourceforge.jp/ 
+
+
+
+All the files that make up this program are copyright 2009 by Leon Maurer.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You can find a copy of the GNU General Public License at
+    <http://www.gnu.org/licenses/>.
