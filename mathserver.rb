@@ -48,39 +48,37 @@ get '/' do
   #make new worksheet
   $worksheets << Worksheet.new
   #redirect to new worksheet
-  redirect "/worksheet/#{$worksheets.size - 1}#bottom"
+  redirect "/worksheet/#{$worksheets.size - 1}/disp#bottom"
 end
 
-get '/worksheet/:num' do
+get '/worksheet/:num/:command' do
   content_type 'application/xml', :charset => 'utf-8'
   @num = params[:num].to_i
+  @command = params[:command]
   haml :worksheet
 end
 
-post '/worksheet/:num/newcommand' do
+post '/worksheet/:num/:command' do
   content_type 'application/xml', :charset => 'utf-8'
   @num = params[:num].to_i
-  @newcommand = params[:newcommand]
-  begin
-    $worksheets[@num].eval(@newcommand)
-    redirect "/worksheet/#{@num}#bottom"
-  rescue
-    #if there's an error, let the user correct it
-    redirect "/worksheet/#{@num}/edit/#{$worksheets[@num].size - 1}"
-  end
-end
-
-post '/worksheet/:num/edit/:index' do
-  content_type 'application/xml', :charset => 'utf-8'
-  @num = params[:num].to_i
-  @index = params[:index].to_i 
-  @editedcommand = params[:editedcommand]
-  begin
-    $worksheets[@num].eval(@editedcommand,@index)
-    redirect "/worksheet/#{@num}#bottom"
-  rescue
-    #if there's an error, let the user correct it  
-    redirect "/worksheet/#{@num}/edit/#{@index}"
+  @command = params[:command]
+  if @command == 'newcommand'
+    begin
+      $worksheets[@num].eval(params[:newcommand])
+      redirect "/worksheet/#{@num}/disp#bottom"
+    rescue
+      #if there's an error, let the user correct it
+      redirect "/worksheet/#{@num}/edit/#{$worksheets[@num].size - 1}"
+    end
+  elsif @command == 'load'
+    #are we loading it in to the current worksheet or a new one?
+    @num = params[:ws] == 'current' ? params[:num].to_i : $worksheets.size
+    $worksheets[@num] = Worksheet.new
+    YAML.load(params[:file][:tempfile].read).each{|c| $worksheets[@num].eval(c)}
+    redirect "/worksheet/#{@num}/disp#bottom"
+  elsif @command == 'clear'
+    $worksheets[@num] = Worksheet.new
+    redirect "/worksheet/#{@num}/disp#bottom"    
   end
 end
 
@@ -91,34 +89,24 @@ get '/worksheet/:num/edit/:index' do
   haml :edit
 end
 
-get '/worksheet/:num/save' do
-  content_type 'text/plain'
+post '/worksheet/:num/edit/:index' do
+  content_type 'application/xml', :charset => 'utf-8'
+  @num = params[:num].to_i
+  @index = params[:index].to_i 
+  @editedcommand = params[:editedcommand]
+  begin
+    $worksheets[@num].eval(@editedcommand,@index)
+    redirect "/worksheet/#{@num}/disp#bottom"
+  rescue
+    #if there's an error, let the user correct it  
+    redirect "/worksheet/#{@num}/edit/#{@index}"
+  end
+end
+
+get '/worksheet/:num/save/worksheet.rbmw' do
+  content_type 'text/x-yaml'
   @num = params[:num].to_i
   $worksheets[@num].in.to_yaml
-end
-
-get '/worksheet/:num/load' do
-  @num = params[:num].to_i
-  haml :load
-end
-
-post '/worksheet/:num/load' do
-  #are we loading it in to the current worksheet or a new one?
-  @num = params[:ws] == 'current' ? params[:num].to_i : $worksheets.size
-  $worksheets[@num] = Worksheet.new
-  YAML.load(params[:file][:tempfile].read).each{|c| $worksheets[@num].eval(c)}
-  redirect "/worksheet/#{@num}#bottom"
-end
-
-get '/worksheet/:num/clear' do
-  @num = params[:num].to_i
-  haml :clear
-end
-
-post '/worksheet/:num/clear' do
-  @num = params[:num].to_i
-  $worksheets[@num] = Worksheet.new
-  redirect "/worksheet/#{@num}#bottom"
 end
 
 __END__
@@ -143,20 +131,38 @@ __END__
         %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
         %input{:type => :submit, :value => "Calculate"}
     %hr
-    %p{:id => 'bottom'}
-      %a{:href => "/worksheet/#{@num}/save"}="Save"
-      %a{:href => "/worksheet/#{@num}/load"}="Load"
+    %p{:id => "#{@command == 'disp' ? 'bottom' : ''}"}
+      %a{:href => "/worksheet/#{@num}/save/worksheet.rbmw"}="Save"
+      %a{:href => "/worksheet/#{@num}/load#bottom"}="Load"
       %a{:href => "/", :target=>'_blank'}="New"
-      %a{:href => "/worksheet/#{@num}/clear"}="Clear"
+      %a{:href => "/worksheet/#{@num}/clear#bottom"}="Clear"
       - if $worksheets.size > 1
         Open Worksheets:
         - $worksheets.size.times do |i|
           - if i != @num
-            %a{:href => "/worksheet/#{i}#bottom"}="#{i}"
+            %a{:href => "/worksheet/#{i}/disp#bottom"}="#{i}"
           -else
             ="#{i}"
-        %a{:href => "/worksheet/#{@num}#bottom"}="Refresh Current Page"
-
+        %a{:href => "/worksheet/#{@num}/disp#bottom"}="Refresh Current Page"
+    - if @command == 'load'
+      %form{:action=>"/worksheet/#{@num}/load",:method=>"post",:enctype=>"multipart/form-data"}
+        %p='Do you want the loaded worksheet to overwrite the current one or to open in a new worksheet?'
+        %input{:type => :radio, :name => 'ws', :value => 'current', :checked => 'checked'}
+        Current Worksheet
+        %input{:type => :radio, :name => 'ws', :value => 'new'}
+        New Worksheet
+        %p="Please select a file, then hit 'Upload':"
+        %input{:type => :file, :name => 'file'}
+        %br
+        %input{:type=>:submit,:value=>"Upload"}
+    - if @command == 'clear'
+      %form{:action=>"/worksheet/#{@num}/clear",:method=>"post"}
+        %p='Do you really want to clear the worksheet? Your work will not be saved.'
+        %input{:type=>"submit",:value=>"Clear Worksheet"}
+    -if @command != 'disp'
+      %p{:id=>'bottom'}
+        %a{:href => "/worksheet/#{@num}/disp#bottom"}="Cancel"
+	
 @@ edit
 !!! Strict
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
@@ -177,50 +183,3 @@ __END__
                 %input{:type => :submit, :value => "Edit"}	      
           %br
           = "Out #{index}: #{to_html(output)}"
-    %hr
-    %form{:method => 'post', :action => "/worksheet/#{@num}/newcommand", :id => 'entry'}
-      %p
-        %textarea{:cols =>'80', :rows => '5', :name=>'newcommand'}
-        %input{:type => :submit, :value => "Calculate"}
-    %hr
-    %p{:id => 'bottom'}
-      %a{:href => "/worksheet/#{@num}/save"}="Save"
-      %a{:href => "/worksheet/#{@num}/load"}="Load"
-      %a{:href => "/", :target=>'_blank'}="New"
-      %a{:href => "/worksheet/#{@num}/clear"}="Clear"
-      - if $worksheets.size > 1
-        Open Worksheets:
-        - $worksheets.size.times do |i|
-          - if i != @num
-            %a{:href => "/worksheet/#{i}#bottom"}="#{i}"
-          -else
-            ="#{i}"
-        %a{:href => "/worksheet/#{@num}#bottom"}="Refresh Current Page"
-    
-@@ load
-!!! Strict
-%html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
-  %head
-    %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title="Loading Worksheet #{@num}"
-  %body
-    %form{:action=>"/worksheet/#{@num}/load",:method=>"post",:enctype=>"multipart/form-data"}
-      %p='Do you want the loaded worksheet to overwrite the current one or to open in a new worksheet?'
-      %input{:type => :radio, :name => 'ws', :value => 'current', :checked => 'checked'} Current Worksheet
-      %input{:type => :radio, :name => 'ws', :value => 'new'} New Worksheet
-      %p='Please select a file:'
-      %input{:type => :file, :name => 'file'}
-      %br
-      %input{:type=>:submit,:value=>"Upload"}
-      
-@@ clear
-!!! Strict
-%html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
-  %head
-    %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title="Are you sure you'd like to clear worksheet #{@num}?"
-  %body
-    %p='Do you really want to clear the worksheet? Your work will not be saved.'
-    %br
-    %form{:action=>"/worksheet/#{@num}/clear",:method=>"post"}
-      %input{:type=>"submit",:value=>"Clear Worksheet"}
