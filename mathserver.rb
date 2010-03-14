@@ -128,7 +128,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title Worksheet #{@num}
+    %title="Worksheet #{@num}"
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
@@ -163,7 +163,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title Editing Worksheet #{@num}, Line #{@index}
+    %title="Editing Worksheet #{@num}, Line #{@index}"
   %body
     %ul
       - $worksheets[@num].in.zip($worksheets[@num].out).each_with_index do |(input,output),index|
@@ -203,7 +203,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title Loading Worksheet #{@num}
+    %title="Loading Worksheet #{@num}"
   %body
     %form{:action=>"/worksheet/#{@num}/load",:method=>"post",:enctype=>"multipart/form-data"}
       %p='Do you want the loaded worksheet to overwrite the current one or to open in a new worksheet?'
@@ -218,7 +218,7 @@ __END__
 %html{:xmlns => "http://www.w3.org/1999/xhtml", "xml:lang" => "en", :lang => "en"}
   %head
     %meta{"http-equiv" => "Content-type", :content =>" text/html;charset=UTF-8"}
-    %title Are you sure you'd like to clear worksheet #{@num}?
+    %title="Are you sure you'd like to clear worksheet #{@num}?"
   %body
     %p='Do you really want to clear the worksheet? Your work will not be saved.'
     %br

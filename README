@@ -3,6 +3,10 @@ have a web interface like SAGE (http://www.sagemath.org/), but be written in
 ruby. It uses the symbolic library to do symbolic mathematics, and currently 
 supports syntax highlighting and basic 2D plotting.
 
+See an example worksheet at:
+
+https://mywebspace.wisc.edu/lnmaurer/web/rubymath/example.xhtml
+
 It is in a rough but working state, and can use any help that it can get.
 
 This program relies on require haml, sinatra, and coderay -- available as ruby
