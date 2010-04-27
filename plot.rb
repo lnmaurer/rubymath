@@ -1,6 +1,7 @@
 
 #require 'svg/svg'
 require '/home/leon/Development/rubymath/svg/svg.rb'
+# require '/Users/leonmaurer/Dropbox/Development/rubymath/svg/svg.rb'
 
 PlotColors = ['aqua', 'gray', 'navy', 'green', 'olive', 'teal', 'blue', 'lime', 'purple', 'fuchsia', 'maroon', 'red', 'yellow']
 CircleMarkers = PlotColors.collect do |color|
@@ -95,7 +96,7 @@ class Plot2D < Plot
     
     @fctns.each do |hsh|
       x << linspace(xmin,xmax,100) #IS 100 STEPS ALWAYS GOOD?
-      y << x[-1].collect{|xi| hsh[:fctn].subs(hsh[:xvar],xi,true)}      
+      y << x[-1].collect{|xi| hsh[:fctn].subs(hsh[:xvar],xi).value}      
       styles << hsh[:style]
     end
     

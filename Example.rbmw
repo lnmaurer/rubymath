@@ -1,0 +1,11 @@
+--- 
+Comments: []
+
+Hidden: []
+
+Input: 
+- x = var(:name=>'x')
+- Sin[x**2].diff(x)
+- Exp[4.3]
+- plot2d([Sin[x].taylor(x,0,2),Sin[x].taylor(x,0,4),Sin[x].taylor(x,0,6),Sin[x]],x,[-6,6],[-6,6])
+Worksheet_Name: Example

@@ -7,7 +7,7 @@
 require '/home/leon/Development/rubymath/svg/misc'
 require '/home/leon/Development/rubymath/svg/core'
 require '/home/leon/Development/rubymath/svg/element'
-require '/home/leon/Development/rubymath/svg/style'
+require '/home/leon/Dropbox/Development/rubymath/svg/style'
 
 #==============================================================================#
 #==============================================================================#
