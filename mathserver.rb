@@ -1,6 +1,7 @@
 # require '/home/leon/Development/symbolic/lib/symbolic.rb'
 require '/home/leon/Development/symbolic/lib/symbolic.rb'
 require 'numeric'
+require 'physical_constants'
 require 'plot'
 require 'yaml'
 require 'rubygems'

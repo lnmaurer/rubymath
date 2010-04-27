@@ -7,6 +7,7 @@ def linspace(start,stop,num = 100)
 end
 
 
+#numerical integration using Simpson's method
 def nint(func,var,lb,ub,points=1000)
   res = 0
   step = (ub.to_f-lb)/points
@@ -22,7 +23,7 @@ end
 
 def newtons_method(func,vars,guess,accuracy = 0.01)
   if func.is_a?(Array)
-    
+    #TODO: make it work in multiple dimensions
   else
     val = func.subs(vars,guess).value
     begin
